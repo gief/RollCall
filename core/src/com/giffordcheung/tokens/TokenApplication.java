@@ -68,6 +68,7 @@ public class TokenApplication implements ApplicationListener
 	TokenManager token_manager;
 	TouchPad touch_pad;
 	Table token_display_table;
+	InputMultiplexer input_multiplexer;
 	
     @Override
     public void create()
@@ -89,16 +90,25 @@ public class TokenApplication implements ApplicationListener
 		token_display_table.setFillParent(true);
 		stage.addActor(token_display_table);
 		
-		touch_pad = new TouchPad(this);
-		Gdx.input.setInputProcessor(touch_pad);
 		
+		touch_pad = new TouchPad(this);
 		token_manager = new TokenManager(this);
+		//Input Processors
+		input_multiplexer = new InputMultiplexer();
+		// order matters: https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/InputMultiplexer.java
+		input_multiplexer.addProcessor(stage);		
+		input_multiplexer.addProcessor(touch_pad);
+		Gdx.input.setInputProcessor(input_multiplexer);
+		
+
 		
 		//Gdx.input.setInputProcessor(stage);
 		
 		if (Log.LOGGING) {
 			Skin skin = new Skin();
-			Log.initializeLogButton(skin,picture_manager.getTexture());
+			/*
+			 * Log.initializeLogButton(skin,picture_manager.getTexture());
+		
 
 			token_display_table.addActor(Log.getLogButton());
 			
@@ -107,7 +117,7 @@ public class TokenApplication implements ApplicationListener
 			token_display_table.addActor(test_token.getButton());
 			
 			//Gdx.input.setInputProcessor(Log.getLogButton());
-			
+			 */
 			stage.addActor(Log.getOutLabel());
 			Log.getOutLabel().setY(35);
 			Log.setOut(" y="+Log.getOutLabel().getY());

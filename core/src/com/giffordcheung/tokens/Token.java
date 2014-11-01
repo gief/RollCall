@@ -63,7 +63,7 @@ public class Token
 
 	
 	//initialize button
-	public void initializePending(Drawable drawable, BitmapFont font) {
+	public Button initializePending(Drawable drawable, BitmapFont font) {
 		
 		Pixmap pixmap = new Pixmap(background_width, background_height, Pixmap.Format.RGBA8888);
 
@@ -94,14 +94,15 @@ public class Token
 		skin.add("default", textButtonStyle);
 
 		this.button = new TextButton("test", skin);
-
+		this.button.setUserObject(this);
 		this.button.addListener( new ChangeListener(){
 				@Override
 				public void changed (ChangeEvent event, Actor actor) {
-					System.out.println("Button Pressed");
-					Log.setOut("boom");
+					Log.setOut("boom " + ((Token) actor.getUserObject()).index);
 				}
-			});
+		});
+		
+		return this.button;
 	}
 	
 	public void setTextureClip(Texture texture) {

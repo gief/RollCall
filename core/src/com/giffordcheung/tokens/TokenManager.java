@@ -57,6 +57,7 @@ public class TokenManager
 		//pending.moveTo(border_location.x, border_location.y, (float).25); // typecasting because we don't mind if it just truncates
 		// add to array list
 		tokens.add(pending);
+		pending.index = tokens.indexOf(pending);
 		/*
 		Collections.sort(tokens, new Comparator<Token>() {
 			// TODO Test this sort function
