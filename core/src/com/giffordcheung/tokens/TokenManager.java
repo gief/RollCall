@@ -1,16 +1,14 @@
 package com.giffordcheung.tokens;
 
-import java.util.*;
-import java.util.function.Function;
-import java.util.function.ToDoubleFunction;
-import java.util.function.ToIntFunction;
-import java.util.function.ToLongFunction;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class TokenManager
 {
-	private HashMap pending_tokens = new HashMap(8);
-	private ArrayList tokens = new ArrayList(20);
+	private HashMap<Integer, Token> pending_tokens = new HashMap<Integer, Token>(8);
+	private ArrayList<Token> tokens = new ArrayList<Token>(20);
     private TokenApplication token_application;
+    private Picker picker = new Picker();
 	
 	public TokenManager(TokenApplication token_application) {
 		this.token_application = token_application;
@@ -33,14 +31,14 @@ public class TokenManager
 	}
 	
 	public Token getPendingToken(int index) {
-		return (Token) pending_tokens.get(index);
+		return pending_tokens.get(index);
 	}
 
 	public Point calculateClosestBorderLocation(Point point) {
 		// given a point
 		// calculate where it is in 
 		//int offset =;
-		int x = (point.x < token_application.viewport.getScreenWidth()/2 ? Token.background_width : token_application.viewport.getScreenWidth()) -   (int) Token.background_width / 2 ;
+		int x = (point.x < token_application.viewport.getScreenWidth()/2 ? Token.background_width : token_application.viewport.getScreenWidth()) -   Token.background_width / 2 ;
 		//int y = point.y;
 		return new Point(x, point.y);
 	}
@@ -49,7 +47,6 @@ public class TokenManager
 	 * All tokens will be automatically evenly arranged in a circle around the border. Priority towards the corners...
 	 * @param pending
 	 */
-	@SuppressWarnings("unchecked")
 	public void addToken(Token pending) {
 		Point center = pending.uncenter(new Point((int)pending.getButton().getX(),(int)pending.getButton().getY()));
 		Point border_location = calculateClosestBorderLocation(center);
@@ -135,8 +132,8 @@ public class TokenManager
 		int placeholder_size = tokens.size();
 		if (placeholder_size % 4 > 0) placeholder_size += 4 - (placeholder_size % 4);
 		
-		double dbl_num_tokens_along_x_axis = numTokensX(token_application.viewport.getScreenWidth(), token_application.viewport.getScreenHeight(), (double)placeholder_size);
-		double dbl_num_tokens_along_y_axis = numTokensY(dbl_num_tokens_along_x_axis, (double)placeholder_size);
+		double dbl_num_tokens_along_x_axis = numTokensX(token_application.viewport.getScreenWidth(), token_application.viewport.getScreenHeight(), placeholder_size);
+		double dbl_num_tokens_along_y_axis = numTokensY(dbl_num_tokens_along_x_axis, placeholder_size);
 		int num_tokens_along_x_axis = 1 + (int) Math.round(dbl_num_tokens_along_x_axis);
 		int num_tokens_along_y_axis = 1 + (int) Math.round(dbl_num_tokens_along_y_axis);
 		
@@ -152,32 +149,32 @@ public class TokenManager
 
 			if (i < num_tokens_along_x_axis) {
 				// Tokens along the top from left corner to almost the right corner
-				y = (int) Token.background_height / 2; // y
+				y = Token.background_height / 2; // y
 				x = i * x_interval;
 				// adjustments for corner
-				if (i == 0) x += (int) (Token.background_width / 2);
+				if (i == 0) x += Token.background_width / 2;
 			} else if ( i < num_tokens_along_x_axis + num_tokens_along_y_axis) {
 				// Tokens along the right, from top right corner down to almost the bottom
 				y = (i - num_tokens_along_x_axis) * y_interval;
-				x = token_application.viewport.getScreenWidth() - (int) Token.background_width / 2; // x
+				x = token_application.viewport.getScreenWidth() - Token.background_width / 2; // x
 				// adjustments for corner
-				if (i == num_tokens_along_x_axis) y += (int) (Token.background_height / 2);
+				if (i == num_tokens_along_x_axis) y += Token.background_height / 2;
 			} else if ( i < 2*num_tokens_along_x_axis + num_tokens_along_y_axis) {
 				// Tokens along the bottom, from the lower right corner to almost the left
-				y = token_application.viewport.getScreenHeight() - (int) (Token.background_height / 2); // checked works
+				y = token_application.viewport.getScreenHeight() - Token.background_height / 2; // checked works
 				x = (num_tokens_along_x_axis * x_interval) - ((i-(num_tokens_along_x_axis + num_tokens_along_y_axis)) * x_interval);
 				if (i == num_tokens_along_x_axis + num_tokens_along_y_axis) {
-					x -= (int) (Token.background_width / 2);
+					x -= Token.background_width / 2;
 				}
 			} else {
 				// Tokens along the left, from the lower left corner to almost the top
 				y = (num_tokens_along_y_axis * y_interval) - ((i-(2*num_tokens_along_x_axis + num_tokens_along_y_axis))*y_interval);
-				x = (int) Token.background_width / 2; // checked works
+				x = Token.background_width / 2; // checked works
 				if (i == 2*num_tokens_along_x_axis + num_tokens_along_y_axis) {
-					y -= (int) (Token.background_height / 2);
+					y -= Token.background_height / 2;
 				}
 			} 
-			((Token)tokens.get(i)).moveTo(x,token_application.viewport.getScreenHeight()-y, (float)0.25);
+			tokens.get(i).moveTo(x,token_application.viewport.getScreenHeight()-y, (float)0.25);
 		}
 		return;
 	}
@@ -207,6 +204,23 @@ public class TokenManager
 	public double numTokensY(double x, double n) {
 		if (n%4 != 0 ) return -1;
 		return (n - 2*x - 4)/2;
+	}
+
+	public void pick() {
+		if (tokens.size() == 0) return;
+		
+		for (Token token : tokens) {
+			token.returnToNormal();
+		}
+		int random = (int) (Math.random() * tokens.size());
+		Token picked = tokens.get(random);
+		//picked.showAsPicked();
+		TokenApplication.main.permena_display_table.addActor(this.picker.getWinnerImage());
+		this.picker.getWinnerImage().setPosition(picked.getButton().getX(), picked.getButton().getY());
+	}
+	
+	public void hidePick() {
+		TokenApplication.main.permena_display_table.removeActor(this.picker.getWinnerImage());
 	}
 	
 	

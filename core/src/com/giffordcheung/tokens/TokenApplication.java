@@ -1,15 +1,37 @@
 package com.giffordcheung.tokens;
 
-import com.badlogic.gdx.*;
-import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.*;
-import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.actions.*;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.utils.viewport.*;
+import com.badlogic.gdx.ApplicationListener;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputMultiplexer;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 /**
- * RollCall is a board game utility that combines photography with a simple player tracker + random number generator. 
+ * Better name:
+ * Token
+ * Assist
+ * Jeeves
+ * Partay
+ * Tokenparty
+ * 
+ * Everything you want to do on your phone when you play board games. Nothing more.
+ * 
+ * Runner
+ * 
+ * BoardgameRunner
+ * 
+ * GameRunner
+ * Features
+ * 
+ * Token is a board game utility that combines photography with a simple player tracker + random number generator. 
  * The primary use scenario is:
  * 
  * A "Game Facilitator" sits down to play with his friends. He takes a picture of all of the player tokens together
@@ -22,7 +44,6 @@ import com.badlogic.gdx.utils.viewport.*;
  * Answer shown on the screen with an excited message
  * Press a delete key to remove the message
  * 
- * Future work: reordering the tokens
  * 
  * 
  * Cognitive analysis:
@@ -41,16 +62,17 @@ import com.badlogic.gdx.utils.viewport.*;
  * 
  * 
  * TODO:
- * [ ] Draw token 
+ * [x] Draw token 
  * - Ok if image is out of bounds
- * [ ] Move token to edge
+ * [x] Move token to edge
  * - Calculate "closestEdgeCoordinates"
- * [ ] Detect shake
- * [ ] Run random selector
- * [ ] generate ["winner"] button
+ * - "nicly arranged"
+ * [x] Menu
+ * [x] Run random selector
+ * [x] generate ["winner"] button
  * [ ] display winner "delete" button
  * [ ] display token "delete" button
- *  
+ *  [ ] CAMERA
  * 
  * @author Gifford Cheung
  *
@@ -58,6 +80,11 @@ import com.badlogic.gdx.utils.viewport.*;
 
 public class TokenApplication implements ApplicationListener
 {
+	ActionResolver actionResolver;
+	public ActionResolver getActionResolver() {
+		return actionResolver;
+	}
+
 	OrthographicCamera camera;
 	PictureManager picture_manager;
 	Stage stage;
@@ -67,12 +94,29 @@ public class TokenApplication implements ApplicationListener
 	PolygonSpriteBatch polybatch;
 	TokenManager token_manager;
 	TouchPad touch_pad;
-	Table token_display_table;
+	Table ephemera_display_table;
+	Table permena_display_table;
 	InputMultiplexer input_multiplexer;
+	MainMenu main_menu;
+	
+	static TokenApplication main;
+	
+	public TokenApplication(ActionResolver actionresolver) {
+    	this.actionResolver = actionresolver;
+	}
 	
     @Override
     public void create()
 	{
+    	/*
+    	Looper.prepare();
+    	mHandler = new Handler() {
+    		public void handleMessage(Message msg) {
+    			//process incoming messages
+    		}
+    	};
+    	*/
+    	main = this;
 		camera = new OrthographicCamera();
 		viewport = new ScreenViewport(camera); 
 		picture_manager = new PictureManager();
@@ -86,20 +130,26 @@ public class TokenApplication implements ApplicationListener
 		
 		//what happens on a reset()?
 		stage = new Stage(viewport, batch); //also pass the singelton batch here. Try just to use onee batch to have a good performance.
-		token_display_table = new Table();
-		token_display_table.setFillParent(true);
-		stage.addActor(token_display_table);
+		permena_display_table = new Table();
+		permena_display_table.setFillParent(true);
+		stage.addActor(permena_display_table);
 		
+		ephemera_display_table = new Table();
+		ephemera_display_table.setFillParent(true);
+		stage.addActor(ephemera_display_table);
 		
 		touch_pad = new TouchPad(this);
 		token_manager = new TokenManager(this);
 		//Input Processors
 		input_multiplexer = new InputMultiplexer();
+		
 		// order matters: https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/InputMultiplexer.java
 		input_multiplexer.addProcessor(stage);		
 		input_multiplexer.addProcessor(touch_pad);
 		Gdx.input.setInputProcessor(input_multiplexer);
-		
+
+		main_menu = new MainMenu();
+		main_menu.initialize();
 
 		
 		//Gdx.input.setInputProcessor(stage);

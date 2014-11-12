@@ -2,12 +2,18 @@ buildscript {
     repositories {
         mavenCentral()
         jcenter()
+		/* maven {
+			this repository was used to test android support libraries, the repo is
+			publicly posted on a stackoverflow comment
+			since we are not going to use the appcomapt-v7 library after all, this is commented out
+			url "https://raw.github.com/kmchugh/android.support/mvn-repo"
+		} */
     }
     dependencies {
         classpath 'de.richsource.gradle.plugins:gwt-gradle-plugin:0.5'
         classpath 'com.android.tools.build:gradle:0.13+'
         classpath 'org.robovm:robovm-gradle-plugin:1.0.0-alpha-04'
-		classpath 'com.android.support:appcompat-v7:21.0.+'
+		/* classpath "com.android.support:appcompat-v7:18.0.+" */
     }
 }
 
@@ -97,7 +103,7 @@ project(":core") {
     dependencies {
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
-    }
+	}
 }
 
 tasks.eclipse.doLast {

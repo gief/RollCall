@@ -1,14 +1,19 @@
 package com.giffordcheung.tokens;
 
-import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.*;
-import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.actions.*;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton.*;
-import com.badlogic.gdx.scenes.scene2d.utils.*;
-
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 
 public class Token
 {
@@ -38,7 +43,7 @@ public class Token
 
 	public void setBackgroundHeight(int background_height)
 	{
-		this.background_height = background_height;
+		Token.background_height = background_height;
 	}
 
 	public int getBackgroundHeight()
@@ -48,7 +53,7 @@ public class Token
 
 	public void setBackgroundWidth(int background_width)
 	{
-		this.background_width = background_width;
+		Token.background_width = background_width;
 	}
 
 	public int getBackgroundWidth()
@@ -143,6 +148,14 @@ public class Token
 		int x = p.x + (int) Math.floor( background_width / 2);
 		int y = p.y + (int) Math.floor( background_height / 2);
 		return new Point(x,y);
+	}
+
+	public void returnToNormal() {
+		Log.log("normal!");
+	}
+
+	public void showAsPicked() {
+		Log.log("picked! " + this.button.getX());
 	}
 	
 }

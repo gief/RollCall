@@ -1,11 +1,24 @@
 package com.giffordcheung.tokens;
 
-import com.badlogic.gdx.*;
-import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.Pixmap.Blending;
-import com.badlogic.gdx.graphics.g2d.*;
 
-public class PictureManager
+import java.io.File;
+import java.io.IOException;
+
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Environment;
+import android.provider.MediaStore;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.TextureData;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+
+public class PictureManager 
 {
 	private Texture texture;
 	private TextureRegion backgroundTexture;
@@ -90,6 +103,33 @@ public class PictureManager
 			p.y - y_offset);
 		return offsetted;
 	}
+
+	public void camera() {
+		// bug? http://stackoverflow.com/questions/1910608/android-action-image-capture-intent from 2009, might 
+		
+		// WORK THIS IN IN THE FUTURE hasSystemFeature(PackageManager.FEATURE_CAMERA);
+		// http://developer.android.com/guide/topics/media/camera.html#intents
+		 // create Intent to take a picture and return control to the calling application
+		File imagesFolder = new File(Environment.getExternalStorageDirectory(), "/TokenBgs");
+		if (!imagesFolder.exists()) {
+			Boolean success = imagesFolder.mkdirs();
+			if (!success) return;
+		}
+	    File image = new File(imagesFolder, "temp.jpg");
+	    if (!image.exists()) {
+	    	try {
+				image.createNewFile();
+			} catch (IOException e) {
+				return;
+			}
+	    }
+	    Uri uriSavedImage = Uri.fromFile(image);
+	    Log.log(TokenApplication.main.toString());
+	    if (TokenApplication.main.actionResolver != null) {
+	    	TokenApplication.main.getActionResolver().requestPicture(uriSavedImage);
+	    }
+	}
+	
 		
 	
 }

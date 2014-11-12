@@ -1,9 +1,9 @@
 package com.giffordcheung.tokens;
 
-import com.badlogic.gdx.*;
-import com.badlogic.gdx.graphics.g2d.*;
+import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
-import com.badlogic.gdx.scenes.scene2d.utils.*;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 /*
 Handles input processes  
 */
@@ -36,24 +36,27 @@ public class TouchPad implements InputProcessor
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+    	token_application.permena_display_table.setVisible(false);
         Token new_token = token_application.token_manager.initializePendingToken(pointer);
 		Drawable drawable = null;
 		BitmapFont font = new BitmapFont();
 		Button pending = new_token.initializePending(drawable, font);
-		Log.log("added Pending");
+		//Log.log("added Pending");
 		//Log.setOut("initialized" + new_token.index +"   "+ screenX + " " + screenY + " " + pointer + " " + button);
-        token_application.token_display_table.addActor(new_token.getButton());
+        token_application.ephemera_display_table.addActor(new_token.getButton());
 		new_token.moveTo(screenX,token_application.viewport.getScreenHeight() - screenY, 0);
 		return true;
     }
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-		// Debugging info
+		// Debugging infou
     	Log.setOut("u" + screenX + " " + screenY + " " + pointer + " " + button);
-		
+    	token_application.permena_display_table.setVisible(true);
+    	token_application.token_manager.hidePick();
     	// What Token is pending?
     	Token pending = token_application.token_manager.getPendingToken(pointer);
+    	token_application.permena_display_table.addActor(pending.getButton());
 		// Calculate the token location to take a snapshot of the underlying picture
     	Point adjusted = token_application.picture_manager.unOffset(new Point(screenX, screenY));
 		adjusted = pending.recenter(adjusted);
