@@ -71,16 +71,32 @@ public class ActionResolverAndroid implements ActionResolver {
 		
 	}
 
+	public int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 100;
 	@Override
 	public void requestPicture(Uri uriSavedImage) {
-		int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 100;
+		
 	    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 	    intent.putExtra(MediaStore.EXTRA_OUTPUT, uriSavedImage);
 	    // start the image capture Intent
-	    // java.lang.RuntimeException: Can't create handler inside thread that has not called Looper.prepare();
-	    
 	    if (intent.resolveActivity(appContext.getPackageManager()) != null) {
 		    ((Activity)appContext).startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+	    }
+	    
+	}
+
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+	    // Check which request we're responding to
+	    if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE  && resultCode == Activity.RESULT_OK) {
+	    	//Log.log("picture callback");
+	    	/* http://developer.android.com/training/camera/photobasics.html
+	    	 * Thumbnails
+	        Bundle extras = data.getExtras();
+	        Bitmap imageBitmap = (Bitmap) extras.get("data");
+	        mImageView.setImageBitmap(imageBitmap);
+	        */
+	    	// By now, we expect that the image has been properly saved to the File defined in PictureManager
+	    	// So, we ask PictureManager to take the next task
+	    	TokenApplication.main.picture_manager.cameraCallback();
 	    }
 	}
 }

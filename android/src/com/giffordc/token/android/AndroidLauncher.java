@@ -1,5 +1,6 @@
 package com.giffordc.token.android;
 
+import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.view.Menu;
@@ -27,6 +28,11 @@ public class AndroidLauncher extends AndroidApplication {
 		
 
         //initialize(new ToastTest(actionResolver));
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+	    actionResolver.onActivityResult(requestCode, resultCode, data);
 	}
 	
 }

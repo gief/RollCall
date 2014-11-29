@@ -10,10 +10,14 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
+import com.badlogic.gdx.scenes.scene2d.utils.Align;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent;
+import com.giffordcheung.tokens.MainMenu.MenuItem;
 
 public class Token
 {
@@ -98,12 +102,14 @@ public class Token
 		textButtonStyle.font = font = skin.getFont("default_font"); 
 		skin.add("default", textButtonStyle);
 
-		this.button = new TextButton("test", skin);
+		this.button = new TextButton("", skin);
+		this.button.setName("TokenButton" + this.toString());
 		this.button.setUserObject(this);
 		this.button.addListener( new ChangeListener(){
 				@Override
 				public void changed (ChangeEvent event, Actor actor) {
-					Log.setOut("boom " + ((Token) actor.getUserObject()).index);
+					((Token) actor.getUserObject()).toggleMenu();
+					//Log.setOut("boom " + ((Token) actor.getUserObject()).index);
 				}
 		});
 		
@@ -125,9 +131,6 @@ public class Token
 		skin.add("default", textButtonStyle);
 		button.setStyle(textButtonStyle);
 		button.setVisible(true);
-		
-		//test delete this
-		//this.button = new TextButton("uppity", skin);
 	}
 	
 	public void moveTo(int x, int y, float duration) {
@@ -136,6 +139,7 @@ public class Token
 		action.setPosition(center.x, center.y);
 		action.setDuration(duration);
 		button.addAction(action);
+		// TODO here is where the button moveto should be
 	}
 	
 	public Point recenter(Point p) {
@@ -151,11 +155,122 @@ public class Token
 	}
 
 	public void returnToNormal() {
-		Log.log("normal!");
+		TokenApplication.main.token_manager.hidePick(this);
 	}
 
 	public void showAsPicked() {
-		Log.log("picked! " + this.button.getX());
+		TokenApplication.main.token_manager.pick(this);
+	}
+
+	/* where to add and remove the menu buttons */
+	private Table display_table;
+	private TextButton _lazy_delete;
+	private TextButton _lazy_roll_dice;
+	private TextButton _lazy_toggle_pick;
+	private TextButton _lazy_annotate;
+	private int diameter = 80;
+	
+	public void initializeTokenMenu() {
+		// Replicated from Token, TODO: create a new class to hold this style?
+
+		this.display_table = TokenApplication.main.permena_display_table;
+		
+		Pixmap pixmap = new Pixmap(diameter, diameter, Pixmap.Format.RGBA8888);
+
+        //Draw a circle about the middle
+        pixmap.setColor(Color.WHITE);
+        pixmap.fillCircle(pixmap.getWidth()/2, pixmap.getHeight()/2, pixmap.getHeight()/2 - 2);
+		pixmap.setColor(Color.GRAY);
+		pixmap.fillCircle(pixmap.getWidth()/2, pixmap.getHeight()/2, pixmap.getHeight()/2 - 4);
+        
+		Texture circle_texture = new Texture(pixmap);
+
+        //It's the textures responsibility now... get rid of the pixmap
+        pixmap.dispose();
+		
+		TextureAtlas texture_atlas = new TextureAtlas();
+		texture_atlas.addRegion("circle", circle_texture, 0,0,diameter,diameter);
+		Skin skin = new Skin();
+		skin.add("default_font", new BitmapFont());
+		skin.addRegions(texture_atlas);
+		TextButtonStyle textButtonStyle = new TextButtonStyle();
+		
+		textButtonStyle.up = skin.newDrawable("circle", Color.WHITE); 
+		textButtonStyle.down = skin.newDrawable("circle", Color.WHITE);
+		textButtonStyle.checked = skin.newDrawable("circle", Color.WHITE);
+		textButtonStyle.over = skin.newDrawable("circle", Color.WHITE);
+		textButtonStyle.font = skin.getFont("default_font"); 
+		skin.add("default", textButtonStyle);
+		
+		// Create delete button
+		_lazy_delete = new TextButton("X", skin);
+		_lazy_delete.setName("_lazy_delete" + this.toString()); // for use with findActor
+		_lazy_delete.setUserObject(this);
+		_lazy_delete.addListener( new ChangeListener(){
+			@Override
+			public void changed (ChangeEvent event, Actor actor) {
+				((Token) actor.getUserObject()).pressed(TokenMenuItem.DELETE, (Token) actor.getUserObject());
+			}
+		});
+		
+		// Create clear button
+		_lazy_toggle_pick = new TextButton("Toggle pick", skin);
+		_lazy_toggle_pick.setName("_lazy_toggle_pick" + this.toString());
+		_lazy_toggle_pick.setUserObject(this);
+		_lazy_toggle_pick.addListener( new ChangeListener(){
+			@Override
+			public void changed (ChangeEvent event, Actor actor) {
+				((Token) actor.getUserObject()).pressed(TokenMenuItem.TOGGLE_PICK, (Token) actor.getUserObject());
+			}
+		});
+		
+		
+		setMenuButtonLocations();
 	}
 	
+
+	public void setMenuButtonLocations() {
+		if (_lazy_delete != null) {
+			_lazy_delete.setX(this.button.getX(Align.left));
+			_lazy_delete.setY(this.button.getY(Align.center) + diameter/2 + 2);
+			_lazy_toggle_pick.setX(this.button.getX(Align.center) + diameter/2);
+			_lazy_toggle_pick.setY(this.button.getY(Align.center) - diameter/2 + 2);
+		}
+	}
+
+	protected void toggleMenu() {
+		if (_lazy_delete == null) initializeTokenMenu();
+		if (display_table.findActor(_lazy_delete.getName()) == null) {
+			display_table.addActor(_lazy_delete);
+			display_table.addActor(_lazy_toggle_pick);
+		} else {
+			display_table.removeActor(_lazy_delete);
+			display_table.removeActor(_lazy_toggle_pick);
+		}
+		
+	}
+
+	
+	public enum TokenMenuItem {
+	    DELETE, ROLL_DICE, TOGGLE_PICK
+	}
+	
+	protected void pressed(TokenMenuItem item, Token token) {
+		this.toggleMenu();
+		switch(item) {
+		case DELETE:
+			display_table.removeActor(this.button);
+			TokenApplication.main.token_manager.delete(token);
+			Log.log("delete this token");
+			break;
+		case TOGGLE_PICK:
+			if (TokenApplication.main.token_manager.isPicked(this)) {
+				TokenApplication.main.token_manager.hidePick(this);
+			} else {
+				TokenApplication.main.token_manager.pick(this);
+			}
+			// hide the buttons for the token
+			break;
+		}
+	}
 }

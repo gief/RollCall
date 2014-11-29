@@ -127,7 +127,7 @@ public class TokenManager
 	}
 	
 	public void reOrderTokensAroundScreen() {
-
+		if (tokens.size() == 0) return;
 		// make sure we have a multiple of 4 for the num_tokens calculation
 		int placeholder_size = tokens.size();
 		if (placeholder_size % 4 > 0) placeholder_size += 4 - (placeholder_size % 4);
@@ -175,6 +175,9 @@ public class TokenManager
 				}
 			} 
 			tokens.get(i).moveTo(x,token_application.viewport.getScreenHeight()-y, (float)0.25);
+			for (Token t: tokens) {
+				t.setMenuButtonLocations();
+			}
 		}
 		return;
 	}
@@ -206,22 +209,54 @@ public class TokenManager
 		return (n - 2*x - 4)/2;
 	}
 
+	
+	private int picked_index;
+	
 	public void pick() {
-		if (tokens.size() == 0) return;
-		
-		for (Token token : tokens) {
-			token.returnToNormal();
-		}
+		if (tokens.size() == 0) return;	
 		int random = (int) (Math.random() * tokens.size());
-		Token picked = tokens.get(random);
+		pick(random);
+	}
+	
+	public void pick(int index) {
+		picked_index = index;
+		Token picked = tokens.get(index);
 		//picked.showAsPicked();
 		TokenApplication.main.permena_display_table.addActor(this.picker.getWinnerImage());
 		this.picker.getWinnerImage().setPosition(picked.getButton().getX(), picked.getButton().getY());
 	}
 	
+	public void pick(Token token) {
+		for (int i = 0 ; i < tokens.size(); i += 1) {
+			if (tokens.get(i).equals(token)) {
+				pick(i);
+				return;
+			}
+		}
+	}
+	
 	public void hidePick() {
+		picked_index = -1;
 		TokenApplication.main.permena_display_table.removeActor(this.picker.getWinnerImage());
 	}
 	
+	public void hidePick(Token token) {
+		if (isPicked(token)) {
+			hidePick();
+			return;
+		}
+	}
 	
+	public Boolean isPicked(Token token) {
+		if (picked_index >= 0) {
+			return tokens.get(picked_index).equals(token);
+		} else {
+			return false;
+		}		
+	}
+
+	public void delete(Token token) {
+		tokens.remove(token);
+		this.reOrderTokensAroundScreen();
+	}
 }

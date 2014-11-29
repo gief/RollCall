@@ -98,6 +98,7 @@ public class TokenApplication implements ApplicationListener
 	Table permena_display_table;
 	InputMultiplexer input_multiplexer;
 	MainMenu main_menu;
+	private Boolean touch_lock = false;
 	
 	static TokenApplication main;
 	
@@ -195,6 +196,11 @@ public class TokenApplication implements ApplicationListener
 		camera.update();
 		batch.setProjectionMatrix(camera.combined);
         batch.begin();
+        if (picture_manager.isUpdatedBackground()) {
+        	picture_manager.loadCameraBackground();
+        	picture_manager.setUpdatedBackground(false);
+        }
+
 		picture_manager.draw(batch);
         batch.end();
 
@@ -235,5 +241,15 @@ public class TokenApplication implements ApplicationListener
     public void resume()
 	{
     }
+
+	public void toggleLock() {
+		// TODO visual lock to show as well
+		touch_lock ^= true;
+		if (touch_lock) {
+			input_multiplexer.removeProcessor(this.touch_pad);
+		} else {
+			input_multiplexer.addProcessor(this.touch_pad); // should have the proper precedence unless we start add/removing the button layer, elsewhere
+		}
+	}
 }
 

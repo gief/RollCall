@@ -34,6 +34,7 @@ public class MainMenu {
 	private Table display_table;
 	private TextButton _lazy_main;
 	private TextButton _lazy_pick;
+	private TextButton _lazy_lock;
 	private TextButton _lazy_camera;
 	private TextButton _lazy_back;
 	int diameter;
@@ -88,6 +89,15 @@ public class MainMenu {
 				TokenApplication.main.main_menu.pressed(MenuItem.PICK);
 			}
 		});
+
+		// Lazy: Create Lock button
+		_lazy_lock = new TextButton("Lock", skin);
+		_lazy_lock.addListener( new ChangeListener(){
+			@Override
+			public void changed (ChangeEvent event, Actor actor) {
+				TokenApplication.main.main_menu.pressed(MenuItem.LOCK);
+			}
+		});
 		
 		// Lazy: Create Camera button
 		_lazy_camera = new TextButton("Camera", skin);
@@ -115,16 +125,19 @@ public class MainMenu {
 		_lazy_back.setPosition(TokenApplication.main.viewport.getScreenWidth() / 2, 
 				TokenApplication.main.viewport.getScreenHeight() / 2, Align.center);
 		_lazy_pick.setPosition(TokenApplication.main.viewport.getScreenWidth() / 2, 
-				200 + TokenApplication.main.viewport.getScreenHeight() / 2, Align.center);
-		_lazy_camera.setPosition(TokenApplication.main.viewport.getScreenWidth() / 2, 
 				-200 + TokenApplication.main.viewport.getScreenHeight() / 2, Align.center);
+		_lazy_lock.setPosition(TokenApplication.main.viewport.getScreenWidth() / 2,
+				-400 + TokenApplication.main.viewport.getScreenHeight() / 2, Align.center);
+		_lazy_camera.setPosition(TokenApplication.main.viewport.getScreenWidth() / 2, 
+				200 + TokenApplication.main.viewport.getScreenHeight() / 2, Align.center);
 		
 
 	}
 	
 	public enum MenuItem {
 	    MAIN,
-	    PICK, CAMERA, BACK
+	    PICK, LOCK, CAMERA, BACK,
+	    TOKEN_DELETE, TOKEN_REROLL, TOKEN_CLEAR
 	}
 	
 	protected void pressed(MenuItem item) {
@@ -132,13 +145,15 @@ public class MainMenu {
 		case MAIN:
 			display_table.removeActor(_lazy_main);
 			display_table.addActor(_lazy_pick);
+			display_table.addActor(_lazy_lock);
 			display_table.addActor(_lazy_camera);
 			display_table.addActor(_lazy_back);
-			Log.log("Main!");
+			//Log.log("Main!");
 			break;
 		case BACK:
 			display_table.addActor(_lazy_main);
 			display_table.removeActor(_lazy_pick);
+			display_table.removeActor(_lazy_lock);
 			display_table.removeActor(_lazy_camera);
 			display_table.removeActor(_lazy_back);
 			break;
@@ -146,12 +161,17 @@ public class MainMenu {
 			TokenApplication.main.token_manager.pick();
 			pressed(MenuItem.BACK);
 			break;
+		case LOCK:
+			TokenApplication.main.toggleLock();
+			pressed(MenuItem.BACK);
+			break;
 		case CAMERA:
 			TokenApplication.main.picture_manager.camera();
 			pressed(MenuItem.BACK);
 			break;
+		
 		default:
-			Log.log("Menu: default");
+			//Log.log("Menu: default");
 			break;
 		}
 	}

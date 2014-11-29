@@ -51,12 +51,15 @@ public class TouchPad implements InputProcessor
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
 		// Debugging infou
-    	Log.setOut("u" + screenX + " " + screenY + " " + pointer + " " + button);
+    	//Log.setOut("u" + screenX + " " + screenY + " " + pointer + " " + button);
+    	
     	token_application.permena_display_table.setVisible(true);
     	token_application.token_manager.hidePick();
+    	
     	// What Token is pending?
     	Token pending = token_application.token_manager.getPendingToken(pointer);
     	token_application.permena_display_table.addActor(pending.getButton());
+    	
 		// Calculate the token location to take a snapshot of the underlying picture
     	Point adjusted = token_application.picture_manager.unOffset(new Point(screenX, screenY));
 		adjusted = pending.recenter(adjusted);
@@ -64,7 +67,6 @@ public class TouchPad implements InputProcessor
 		pending.setTextureClip(token_application.picture_manager.newCircularCrop(adjusted, ((Double)Math.floor(pending.getBackgroundWidth() / 2)).intValue()));
 
 		token_application.token_manager.addToken(pending);
-		
 		
 		return true;
     }

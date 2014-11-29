@@ -2,29 +2,84 @@ package com.giffordcheung.tokens;
 
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 
+import com.badlogic.gdx.Files.FileType;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.TextureData;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class PictureManager 
 {
 	private Texture texture;
-	private TextureRegion backgroundTexture;
+	private TextureRegion backgroundTextureRegion;
 	private int x_offset,y_offset;
+	private FileHandle background_file_handle;
+	private boolean updated_background_file_handle = false;
+	private Sprite background_sprite;
+	//private Image background_image;
+	
+	
 	public PictureManager()
-	{}
+	{
+		File imagesFolder = new File(Environment.getExternalStorageDirectory(), "/TokenBgs");
+		if (!imagesFolder.exists()) {
+			Boolean success = imagesFolder.mkdirs();
+			if (!success) return;
+		}
+	    File image = new File(imagesFolder, "temp.jpg");
+	    if (!image.exists()) {
+	    	try {
+				image.createNewFile();
+			} catch (IOException e) {
+				return;
+			}
+	    }
+	    
+	    background_file_handle = Gdx.files.external("TokenBgs/temp.jpg"); 
+		
+	}
+	
+	public void initialize() {
+		loadBackground(Gdx.files.internal("default.jpg"));
+	}
+	
+	public void loadBackground(FileHandle file) {
+		texture = new Texture(file);
+		backgroundTextureRegion = new TextureRegion(texture);//, 0, 0, 2048, 563);
+		background_sprite = new Sprite(backgroundTextureRegion);
+		
+		x_offset = ((Double) Math.floor(Gdx.graphics.getWidth()/2)).intValue() - ((Double)Math.floor(backgroundTextureRegion.getRegionWidth()/2)).intValue();
+		y_offset = ((Double) Math.floor(Gdx.graphics.getHeight()/2)).intValue() - ((Double)Math.floor(backgroundTextureRegion.getRegionHeight()/2)).intValue();
+		background_sprite.setX(x_offset);
+		background_sprite.setY(y_offset);
+		bigpixmap = null;
+	}
+	
+	public boolean isUpdatedBackground() {
+		return updated_background_file_handle;
+	}
+	
+	public void setUpdatedBackground(Boolean value) {
+		updated_background_file_handle = value;
+	}
 
 	public void setTexture(Texture texture)
 	{
@@ -35,18 +90,24 @@ public class PictureManager
 	{
 		return texture;
 	}
+	public Pixmap bigpixmap;
+
+	public void generateBigPixmap () {
+		// pixmap for little circles
+		TextureData texturedata = texture.getTextureData();
+		texturedata.prepare();
+		bigpixmap = texturedata.consumePixmap();
+	}
+
 	
 	public Texture newCircularCrop(Point center, int radius) {
+		if (bigpixmap == null) {
+			generateBigPixmap();
+		}
 		// we need to account for when center.x or center.y is negative.
-		
-		//Log.log("CROPPIN + point" + center.x + "  radius" + radius);
-		
 		int x_offset = (center.x < 0 ? Math.abs(center.x) : 0);
 		int y_offset = (center.y < 0 ? Math.abs(center.y) : 0);
 		
-		TextureData texturedata = texture.getTextureData();
-		texturedata.prepare();
-		Pixmap bigpixmap = texturedata.consumePixmap();
 		//Log.log(texturedata.getFormat().toString());
 		Pixmap cropped_pixmap = new Pixmap(radius * 2, radius * 2, Pixmap.Format.RGBA8888);
 		Pixmap big = new Pixmap(texture.getWidth(), texture.getHeight(), Pixmap.Format.RGBA8888);
@@ -75,23 +136,18 @@ public class PictureManager
 		return new_crop;
 	}
 	
-	public void initialize()
-	{
-		//Load the Default picture of tokens
-		texture = new Texture(Gdx.files.internal("default.jpg"));
-		backgroundTexture = new TextureRegion(texture);//, 0, 0, 2048, 563);
-		x_offset = ((Double) Math.floor(Gdx.graphics.getWidth()/2)).intValue() - ((Double)Math.floor(backgroundTexture.getRegionWidth()/2)).intValue();
-		y_offset = ((Double) Math.floor(Gdx.graphics.getHeight()/2)).intValue() - ((Double)Math.floor(backgroundTexture.getRegionHeight()/2)).intValue();
-		
+	
+	public void loadCameraBackground() {
+		this.loadBackground(background_file_handle);
+		//this.loadBackground(Gdx.files.external("camera.jpg"));
 	}
+	
 	
 	public void draw(SpriteBatch batch)
 	{
-		//Background, centered
-		//No scaling since we expect
-		//to replace this image with a camera 
-		//picture that is the same size as the screen
-		batch.draw(backgroundTexture, x_offset, y_offset);
+		background_sprite.draw(batch);
+
+		//batch.draw(backgroundTextureRegion, x_offset, y_offset);
 //					((Double) Math.floor(Gdx.graphics.getWidth()/2)).intValue() - ((Double)Math.floor(backgroundTexture.getRegionWidth()/2)).intValue(),
 //				    ((Double) Math.floor(Gdx.graphics.getHeight()/2)).intValue() - ((Double)Math.floor(backgroundTexture.getRegionHeight()/2)).intValue());
 		
@@ -105,31 +161,64 @@ public class PictureManager
 	}
 
 	public void camera() {
-		// bug? http://stackoverflow.com/questions/1910608/android-action-image-capture-intent from 2009, might 
 		
 		// WORK THIS IN IN THE FUTURE hasSystemFeature(PackageManager.FEATURE_CAMERA);
 		// http://developer.android.com/guide/topics/media/camera.html#intents
 		 // create Intent to take a picture and return control to the calling application
-		File imagesFolder = new File(Environment.getExternalStorageDirectory(), "/TokenBgs");
-		if (!imagesFolder.exists()) {
-			Boolean success = imagesFolder.mkdirs();
-			if (!success) return;
-		}
-	    File image = new File(imagesFolder, "temp.jpg");
-	    if (!image.exists()) {
-	    	try {
-				image.createNewFile();
-			} catch (IOException e) {
-				return;
-			}
-	    }
-	    Uri uriSavedImage = Uri.fromFile(image);
-	    Log.log(TokenApplication.main.toString());
+	    Uri uriSavedImage = Uri.fromFile(background_file_handle.file());
+	    //Log.log(TokenApplication.main.toString());
 	    if (TokenApplication.main.actionResolver != null) {
 	    	TokenApplication.main.getActionResolver().requestPicture(uriSavedImage);
 	    }
+	    
 	}
+
+	public void cameraCallback() {
 	
+		// TODO Auto-generated method stub
+		// Get the dimensions of the bitmap
+		int targetW = Gdx.graphics.getWidth(); // GL20.GL_MAX_TEXTURE_SIZE; //
+		int targetH = Gdx.graphics.getHeight(); //GL20.GL_MAX_TEXTURE_SIZE; //
 		
-	
+		
+		
+	    BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+	    bmOptions.inJustDecodeBounds = true;
+	    BitmapFactory.decodeFile(Environment.getExternalStorageDirectory() + File.separator + background_file_handle.path(), bmOptions);
+	    int photoW = bmOptions.outWidth;
+	    int photoH = bmOptions.outHeight;
+
+	    // Determine how much to scale down the image
+	    int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
+	    
+	    // Decode the image file into a Bitmap sized to fill the View
+	    bmOptions.inJustDecodeBounds = false;
+	    bmOptions.inSampleSize = scaleFactor;
+	    bmOptions.inPurgeable = true;
+
+	    Bitmap bitmap = BitmapFactory.decodeFile(Environment.getExternalStorageDirectory() + File.separator + background_file_handle.path(), bmOptions);
+	    FileOutputStream fOut;
+		try {
+
+			fOut = (FileOutputStream) background_file_handle.write(false);
+			//fOut = new FileOutputStream(background_file_handle.file());
+		    bitmap.compress(Bitmap.CompressFormat.PNG, 85, fOut);
+		    fOut.flush();
+		    fOut.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
+		
+		// Warning this is being called outside the OpenGL ES
+		//this.background_file_handle.copyTo(Gdx.files.internal("camera.jpg"));
+		this.updated_background_file_handle = true;
+		
+	}
 }
