@@ -15,7 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 
 public class Log
 {
-	static public Boolean LOGGING = true;
+	static public Boolean LOGGING = false;
 	static private String out = "Tokens log.";
 	static private Label out_label = new Label("Log", new LabelStyle(new BitmapFont(), Color.ORANGE));
 	static private Button log_button = new Button();

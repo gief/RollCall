@@ -37,6 +37,7 @@ public class TouchPad implements InputProcessor
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
     	token_application.permena_display_table.setVisible(false);
+    	token_application.token_manager.hideAllTokenMenus();
         Token new_token = token_application.token_manager.initializePendingToken(pointer);
 		Drawable drawable = null;
 		BitmapFont font = new BitmapFont();

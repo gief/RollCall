@@ -130,54 +130,56 @@ public class TokenManager
 		if (tokens.size() == 0) return;
 		// make sure we have a multiple of 4 for the num_tokens calculation
 		int placeholder_size = tokens.size();
-		if (placeholder_size % 4 > 0) placeholder_size += 4 - (placeholder_size % 4);
+		if (tokens.size() % 4 > 0) placeholder_size = tokens.size() + (4 - (tokens.size() % 4));
+		int extras = placeholder_size - tokens.size();
 		
 		double dbl_num_tokens_along_x_axis = numTokensX(token_application.viewport.getScreenWidth(), token_application.viewport.getScreenHeight(), placeholder_size);
 		double dbl_num_tokens_along_y_axis = numTokensY(dbl_num_tokens_along_x_axis, placeholder_size);
 		int num_tokens_along_x_axis = 1 + (int) Math.round(dbl_num_tokens_along_x_axis);
 		int num_tokens_along_y_axis = 1 + (int) Math.round(dbl_num_tokens_along_y_axis);
-		
-		
-		int x_interval = token_application.viewport.getScreenWidth() / num_tokens_along_x_axis;
-		int y_interval = token_application.viewport.getScreenHeight() / num_tokens_along_y_axis;
+		//int x_interval = token_application.viewport.getScreenWidth() / num_tokens_along_x_axis;
+		//int y_interval = token_application.viewport.getScreenHeight() / num_tokens_along_y_axis;
+		int num_tokens_along_top = num_tokens_along_x_axis - (extras > 2 && tokens.size() > 4 ? 1:0);
+		int num_tokens_along_right = num_tokens_along_y_axis - (extras > 0  && tokens.size() > 4 ? 1:0);
+		int num_tokens_along_bottom = num_tokens_along_x_axis; // use max
+		int num_tokens_along_left = num_tokens_along_y_axis - (extras > 1  && tokens.size() > 4 ? 1:0);
+		int top_interval = token_application.viewport.getScreenWidth() / num_tokens_along_top;
+		int bottom_interval = token_application.viewport.getScreenWidth() / num_tokens_along_bottom;
+		int left_interval = token_application.viewport.getScreenHeight() / num_tokens_along_left;
+		int right_interval = token_application.viewport.getScreenHeight() / num_tokens_along_right;
 		
 		int x = 0;
 		int y;
 
 		for (int i = 0; i < tokens.size(); i += 1) {
-
-
-			if (i < num_tokens_along_x_axis) {
+			if (i < num_tokens_along_top) {
 				// Tokens along the top from left corner to almost the right corner
 				y = Token.background_height / 2; // y
-				x = i * x_interval;
+				x = i * top_interval;
 				// adjustments for corner
 				if (i == 0) x += Token.background_width / 2;
-			} else if ( i < num_tokens_along_x_axis + num_tokens_along_y_axis) {
+			} else if ( i < num_tokens_along_top + num_tokens_along_right) {
 				// Tokens along the right, from top right corner down to almost the bottom
-				y = (i - num_tokens_along_x_axis) * y_interval;
+				y = (i - num_tokens_along_top) * right_interval;
 				x = token_application.viewport.getScreenWidth() - Token.background_width / 2; // x
 				// adjustments for corner
-				if (i == num_tokens_along_x_axis) y += Token.background_height / 2;
-			} else if ( i < 2*num_tokens_along_x_axis + num_tokens_along_y_axis) {
+				if (i == num_tokens_along_top) y += Token.background_height / 2;
+			} else if ( i < num_tokens_along_top + num_tokens_along_right + num_tokens_along_bottom) {
 				// Tokens along the bottom, from the lower right corner to almost the left
 				y = token_application.viewport.getScreenHeight() - Token.background_height / 2; // checked works
-				x = (num_tokens_along_x_axis * x_interval) - ((i-(num_tokens_along_x_axis + num_tokens_along_y_axis)) * x_interval);
-				if (i == num_tokens_along_x_axis + num_tokens_along_y_axis) {
+				x = (num_tokens_along_bottom * bottom_interval) - ((i-(num_tokens_along_top + num_tokens_along_right)) * bottom_interval);
+				if (i == num_tokens_along_top + num_tokens_along_right) {
 					x -= Token.background_width / 2;
 				}
 			} else {
 				// Tokens along the left, from the lower left corner to almost the top
-				y = (num_tokens_along_y_axis * y_interval) - ((i-(2*num_tokens_along_x_axis + num_tokens_along_y_axis))*y_interval);
-				x = Token.background_width / 2; // checked works
-				if (i == 2*num_tokens_along_x_axis + num_tokens_along_y_axis) {
+				y = (num_tokens_along_left * left_interval) - ((i-(num_tokens_along_top + num_tokens_along_bottom + num_tokens_along_right))*left_interval);
+				x = Token.background_width / 2; // checked works, though future is to use .center
+				if (i == num_tokens_along_top + num_tokens_along_bottom + num_tokens_along_right)  {
 					y -= Token.background_height / 2;
 				}
 			} 
 			tokens.get(i).moveTo(x,token_application.viewport.getScreenHeight()-y, (float)0.25);
-			for (Token t: tokens) {
-				t.setMenuButtonLocations();
-			}
 		}
 		return;
 	}
@@ -223,7 +225,7 @@ public class TokenManager
 		Token picked = tokens.get(index);
 		//picked.showAsPicked();
 		TokenApplication.main.permena_display_table.addActor(this.picker.getWinnerImage());
-		this.picker.getWinnerImage().setPosition(picked.getButton().getX(), picked.getButton().getY());
+		this.picker.animatePickTo(picked);
 	}
 	
 	public void pick(Token token) {
@@ -259,4 +261,11 @@ public class TokenManager
 		tokens.remove(token);
 		this.reOrderTokensAroundScreen();
 	}
+
+	public void hideAllTokenMenus() {
+		for (int i = 0; i < tokens.size(); i += 1) {
+			tokens.get(i).removeMenu();
+		}
+	}
+
 }

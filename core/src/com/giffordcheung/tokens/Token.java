@@ -133,13 +133,12 @@ public class Token
 		button.setVisible(true);
 	}
 	
-	public void moveTo(int x, int y, float duration) {
+	public void moveTo(int x, int y, float duration) {	
 		MoveToAction action = new MoveToAction();
 		Point center = recenter(new Point(x,y));
 		action.setPosition(center.x, center.y);
 		action.setDuration(duration);
 		button.addAction(action);
-		// TODO here is where the button moveto should be
 	}
 	
 	public Point recenter(Point p) {
@@ -224,7 +223,6 @@ public class Token
 			}
 		});
 		
-		
 		setMenuButtonLocations();
 	}
 	
@@ -243,11 +241,18 @@ public class Token
 		if (display_table.findActor(_lazy_delete.getName()) == null) {
 			display_table.addActor(_lazy_delete);
 			display_table.addActor(_lazy_toggle_pick);
+			setMenuButtonLocations();
 		} else {
+			removeMenu();
+		}
+	}
+	
+	protected void removeMenu() {
+		if (_lazy_delete != null && 
+			display_table.findActor(_lazy_delete.getName()) != null) {
 			display_table.removeActor(_lazy_delete);
 			display_table.removeActor(_lazy_toggle_pick);
 		}
-		
 	}
 
 	
@@ -261,7 +266,8 @@ public class Token
 		case DELETE:
 			display_table.removeActor(this.button);
 			TokenApplication.main.token_manager.delete(token);
-			Log.log("delete this token");
+			TokenApplication.main.token_manager.hideAllTokenMenus();
+			//Log.log("delete this token");
 			break;
 		case TOGGLE_PICK:
 			if (TokenApplication.main.token_manager.isPicked(this)) {
